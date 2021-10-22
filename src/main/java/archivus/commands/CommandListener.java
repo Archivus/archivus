@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class CommandListener extends ListenerAdapter {
-    private final HashMap<String, SlashCommand> commands = new HashMap<String, SlashCommand>(){
+    public static final HashMap<String, SlashCommand> commands = new HashMap<String, SlashCommand>(){
         // Value: Command
         // Key: Name of Command
         {
