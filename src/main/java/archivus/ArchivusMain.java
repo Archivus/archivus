@@ -22,8 +22,7 @@ public class ArchivusMain {
         final Mongo mongo = new Mongo(args[1]);
         mongo.initMongo();
         final CommandListener cmdListener = new CommandListener(mongo);
-
-        JDA jda = JDABuilder.createLight(token,
+        final JDA jda = JDABuilder.createLight(token,
                 GatewayIntent.GUILD_EMOJIS, GatewayIntent.DIRECT_MESSAGES,
                 GatewayIntent.DIRECT_MESSAGES, GatewayIntent.GUILD_MESSAGE_REACTIONS,
                 GatewayIntent.DIRECT_MESSAGE_REACTIONS)
@@ -44,7 +43,6 @@ public class ArchivusMain {
                     jda.updateCommands().addCommands(commandData)
                             .queue();
                 });
-
         /*
          TODO:
             Startup Tasks
