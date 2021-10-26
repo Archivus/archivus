@@ -1,10 +1,12 @@
 package archivus.commands.generalcommands;
 
 import archivus.commands.SlashCommand;
+import archivus.commands.Type;
 import archivus.mongo.Mongo;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyAction;
 
 public class AccountCreationCommand implements SlashCommand {
     @Override
@@ -20,5 +22,15 @@ public class AccountCreationCommand implements SlashCommand {
     @Override
     public CommandData getData() {
         return null;
+    }
+
+    @Override
+    public ReplyAction getHelpMessage(SlashCommandEvent event) {
+        return null;
+    }
+
+    @Override
+    public Type getType() {
+        return Type.ACCOUNT;
     }
 }

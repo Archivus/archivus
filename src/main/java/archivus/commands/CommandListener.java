@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class CommandListener extends ListenerAdapter {
-    private final HashMap<String, SlashCommand> commands = new HashMap<String, SlashCommand>(){
+    public static final HashMap<String, SlashCommand> commands = new HashMap<>(){
         // Value: Command
         // Key: Name of Command
         {
@@ -43,14 +43,15 @@ public class CommandListener extends ListenerAdapter {
         SlashCommand command = commands.get(event.getName());
         if(command == null) return;
 
+        event.deferReply().queue();
         command.execute(event, mongo);
     }
 
     @Override
     public void onButtonClick(@NotNull ButtonClickEvent event) {
-        //Component ID structure nameOfCommand_customIdentifier
+        //Component ID structure userID:nameOfButton_customIdentifier
         String compID = event.getComponentId();
-        String command = compID.substring(0, compID.indexOf('_'));
+        String command = compID.substring(compID.indexOf('_')+1);
 
         SlashCommand slashCommand = commands.get(command);
         slashCommand.executeWithButton(event, mongo);
