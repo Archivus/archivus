@@ -6,7 +6,7 @@ import archivus.commands.SlashCommand;
 import archivus.commands.Type;
 import archivus.mongo.Mongo;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
@@ -14,22 +14,16 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.components.Button;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyAction;
 
 import java.util.HashMap;
 
 public class HelpCommand implements SlashCommand {
-
-
     @Override
     public void execute(SlashCommandEvent event, Mongo mongo) {
         OptionMapping commandOption = event.getOption("command");
         if(commandOption == null)
-            event.replyEmbeds(this.getHelp())
-                    .addActionRow(
-                            Button.primary(event.getUser().getId() + ":account_help", "Account Commands"),
-                            Button.primary(event.getUser().getId() + ":posting_help", "Posting Commands"),
-                            Button.primary(event.getUser().getId() + ":misc_help", "Miscellaneous Commands"),
-                            Button.primary(event.getUser().getId() + ":feed_help", "Feed Commands")).queue();
+            this.getHelpMessage(event).queue();
         else {
             String commandName = commandOption.getAsString();
             SlashCommand slashCommand = CommandListener.commands.get(commandName);
@@ -39,7 +33,7 @@ public class HelpCommand implements SlashCommand {
                 hook.sendMessage("'" + commandName + "' is not a valid command, " +
                         "Try and find the command in the `/help` menu!").queue();
             } else {
-                event.replyEmbeds(slashCommand.getHelp()).queue();
+                slashCommand.getHelpMessage(event).queue();
             }
         }
     }
@@ -49,7 +43,7 @@ public class HelpCommand implements SlashCommand {
         String[] buttonId = event.getComponentId().split(":");
         if(!buttonId[0].equals(event.getUser().getId()))
             return;
-        ButtonAction buttonAction = buttonHandler.get(buttonId[1]);
+        ButtonAction buttonAction = buttonHandler.get(buttonId[1].substring(0, buttonId[1].indexOf('_')));
         buttonAction.buttonExecute(event);
     }
 
@@ -59,12 +53,26 @@ public class HelpCommand implements SlashCommand {
                 .addOption(OptionType.STRING, "command", "Receive help on a specific command");
     }
 
-    //TODO
     @Override
-    public MessageEmbed getHelp() {
+    public ReplyAction getHelpMessage(SlashCommandEvent event) {
         EmbedBuilder embed = new EmbedBuilder();
-        embed.setAuthor("Archivus Commands");
-        return new EmbedBuilder().build();
+        embed.setAuthor("Archivus Commands", event.getJDA().getSelfUser().getAvatarUrl());
+        embed.setDescription("Click on a command topic below or enter `/help COMMAND_NAME` for help on a specific " +
+                "command.");
+        embed.addField("Useful Links",
+                "[Top.gg Page](INSERT PAGE)\n" +
+                        "[Website](INSERT SITE)\n" +
+                        "[Support Server](INSERT SERVER)\n" +
+                        "[Patreon](INSERT PATREON)", false);
+        return event.replyEmbeds(embed.build()) .addActionRow(
+                Button.primary(event.getUser().getId() + ":account_help", "Account Commands")
+                        .withEmoji(Emoji.fromUnicode("U+1F9D1")),
+                Button.primary(event.getUser().getId() + ":posting_help", "Posting Commands")
+                        .withEmoji(Emoji.fromUnicode("U+1F4EC")),
+                Button.primary(event.getUser().getId() + ":misc_help", "Miscellaneous Commands")
+                        .withEmoji(Emoji.fromUnicode("U+1F5D1")),
+                Button.primary(event.getUser().getId() + ":feed_help", "Feed Commands")
+                        .withEmoji(Emoji.fromUnicode("U+1F4DC")));
     }
 
     @Override
@@ -128,8 +136,6 @@ public class HelpCommand implements SlashCommand {
             });
         }
     };
-
-
 }
 
 

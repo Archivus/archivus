@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class CommandListener extends ListenerAdapter {
-    public static final HashMap<String, SlashCommand> commands = new HashMap<String, SlashCommand>(){
+    public static final HashMap<String, SlashCommand> commands = new HashMap<>(){
         // Value: Command
         // Key: Name of Command
         {
@@ -49,7 +49,7 @@ public class CommandListener extends ListenerAdapter {
 
     @Override
     public void onButtonClick(@NotNull ButtonClickEvent event) {
-        //Component ID structure nameOfCommand_customIdentifier
+        //Component ID structure userID:nameOfButton_customIdentifier
         String compID = event.getComponentId();
         String command = compID.substring(compID.indexOf('_')+1);
 
