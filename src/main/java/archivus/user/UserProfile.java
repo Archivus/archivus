@@ -14,7 +14,11 @@ public class UserProfile {
         return null;
     }
 
-    public void retrieveProfile(Mongo mongo, User user){
+    public void retrieveProfile(Mongo mongo, User user) throws AccountDoesNoteExistException{
+
+    }
+
+    public void updateProfile(Mongo mongo){
 
     }
 }

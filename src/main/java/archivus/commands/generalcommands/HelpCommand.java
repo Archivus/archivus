@@ -80,6 +80,7 @@ public class HelpCommand implements SlashCommand {
         return Type.MISC;
     }
 
+    //Map for all actions buttons can do
     private final HashMap<String, ButtonAction> buttonHandler = new HashMap<>(){
         {
             put("account", event -> {

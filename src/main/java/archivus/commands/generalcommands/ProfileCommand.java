@@ -3,6 +3,7 @@ package archivus.commands.generalcommands;
 import archivus.commands.SlashCommand;
 import archivus.commands.Type;
 import archivus.mongo.Mongo;
+import archivus.user.AccountDoesNoteExistException;
 import archivus.user.UserProfile;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Emoji;
@@ -20,25 +21,35 @@ public class ProfileCommand implements SlashCommand {
     public void execute(SlashCommandEvent event, Mongo mongo){
         OptionMapping userOption = event.getOption("user");
         OptionMapping userIDOption = event.getOption("userID");
-        if(event.getOptions().isEmpty()){
-            UserProfile profile = new UserProfile();
-            profile.retrieveProfile(mongo, event.getUser());
-            profile.userEmbed().queue();
-        } else if(userOption != null){
-            User user = userOption.getAsUser();
-            UserProfile userProfile = new UserProfile();
-            userProfile.retrieveProfile(mongo, user);
-            userProfile.userEmbed().queue();
-        } else if(userIDOption != null){
-            String userID = userIDOption.getAsString();
-            event.getJDA().retrieveUserById(userID).queue(user -> {
+        String userId = "";
+        if(event.getOptions().isEmpty())
+            userId = event.getUser().getId();
+        else if(userOption != null)
+            userId = userOption.getAsUser().getId();
+        else if(userIDOption != null)
+            userId = userIDOption.getAsString();
+
+        event.getJDA().retrieveUserById(userId).queue(user -> {
+            try {
                 UserProfile userProfile = new UserProfile();
                 userProfile.retrieveProfile(mongo, user);
                 userProfile.userEmbed().queue();
-            }, e -> event.reply(
-                    "This user does not exist! Please confirm that the ID given is that of the user" +
-                    " you are attempting to view!").queue());
-        }
+            } catch(AccountDoesNoteExistException e){
+                if(event.getOptions().isEmpty())
+                    event.replyEmbeds(new EmbedBuilder().setTitle("Error ⛔")
+                                                        .setDescription("You do not have a registered Archivus account")
+                                                        .addField("Enter `/createaccount` to make one!",
+                                                                "", false)
+                                                        .build()).queue();
+                else event.replyEmbeds(new EmbedBuilder().setTitle("Error ⛔")
+                            .setDescription("This user does not have a registered Archivus account")
+                            .addField("They can enter `/createaccount` to make one!",
+                                    "", false)
+                            .build()).queue();
+            }
+        }, e -> event.reply(
+                "This discord user does not exist! Please confirm that the ID given is that of the user" +
+                        " you are attempting to view!").queue());
     }
 
     @Override
@@ -46,9 +57,18 @@ public class ProfileCommand implements SlashCommand {
         String[] buttonId = event.getComponentId().split(":");
         if(!buttonId[0].equals(event.getUser().getId()))
             return;
-        UserProfile profile = new UserProfile();
-        profile.retrieveProfile(mongo, event.getUser());
-        profile.userEmbed().queue();
+        try {
+            UserProfile userProfile = new UserProfile();
+            userProfile.retrieveProfile(mongo, event.getUser());
+            userProfile.userEmbed().queue();
+        } catch(AccountDoesNoteExistException e){
+                event.replyEmbeds(new EmbedBuilder().setTitle("Error ⛔")
+                        .setDescription("You do not have a registered Archivus account")
+                        .addField("Enter `/createaccount` to make one!",
+
+                                "", false)
+                        .build()).queue();
+        }
     }
 
     @Override
