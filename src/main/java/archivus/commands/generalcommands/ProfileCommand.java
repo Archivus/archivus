@@ -3,11 +3,10 @@ package archivus.commands.generalcommands;
 import archivus.commands.SlashCommand;
 import archivus.commands.Type;
 import archivus.mongo.Mongo;
-import archivus.user.AccountDoesNoteExistException;
+import archivus.user.AccountDoesNotExistException;
 import archivus.user.UserProfile;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Emoji;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -31,10 +30,9 @@ public class ProfileCommand implements SlashCommand {
 
         event.getJDA().retrieveUserById(userId).queue(user -> {
             try {
-                UserProfile userProfile = new UserProfile();
-                userProfile.retrieveProfile(mongo, user);
+                UserProfile userProfile = new UserProfile(mongo, user);
                 userProfile.userEmbed().queue();
-            } catch(AccountDoesNoteExistException e){
+            } catch(AccountDoesNotExistException e){
                 if(event.getOptions().isEmpty())
                     event.replyEmbeds(new EmbedBuilder().setTitle("Error ⛔")
                                                         .setDescription("You do not have a registered Archivus account")
@@ -42,7 +40,8 @@ public class ProfileCommand implements SlashCommand {
                                                                 "", false)
                                                         .build()).queue();
                 else event.replyEmbeds(new EmbedBuilder().setTitle("Error ⛔")
-                            .setDescription("This user does not have a registered Archivus account")
+                            .setDescription("This user does not have a registered Archivus account. " +
+                                    "User: " + e.getTag() + " ~ ID: " + e.getUserID())
                             .addField("They can enter `/createaccount` to make one!",
                                     "", false)
                             .build()).queue();
@@ -58,10 +57,9 @@ public class ProfileCommand implements SlashCommand {
         if(!buttonId[0].equals(event.getUser().getId()))
             return;
         try {
-            UserProfile userProfile = new UserProfile();
-            userProfile.retrieveProfile(mongo, event.getUser());
+            UserProfile userProfile = new UserProfile(mongo, event.getUser());
             userProfile.userEmbed().queue();
-        } catch(AccountDoesNoteExistException e){
+        } catch(AccountDoesNotExistException e){
                 event.replyEmbeds(new EmbedBuilder().setTitle("Error ⛔")
                         .setDescription("You do not have a registered Archivus account")
                         .addField("Enter `/createaccount` to make one!",
