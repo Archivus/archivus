@@ -16,5 +16,5 @@ public interface SlashCommand {
     // Help message for Command. Can contain own action row therefore ReplyAction and not MessageEmbed
     ReplyAction getHelpMessage(SlashCommandEvent event);
     // Type of Command, assign accordingly
-    Type getType();
+    CommandType getType();
 }
