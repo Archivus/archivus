@@ -10,13 +10,9 @@ import net.dv8tion.jda.api.requests.restaction.interactions.ReplyAction;
 import org.bson.Document;
 
 public class UserProfile {
-    int reputation;
-    String userId;
-    String tag;
-    int followers;
-    int archives;
-    String[] following;
-    String[] topics;
+    int reputation, followers, archives;
+    String userId, tag;
+    String[] following, topics;
 
     // Retrieve existing profile
     public UserProfile(Mongo mongo, User user) throws AccountDoesNotExistException {
