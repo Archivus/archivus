@@ -30,6 +30,7 @@ public class ArchivusMain {
                 .addEventListeners(cmdListener)
                 .build();
 
+        // Register all commands
         jda.retrieveCommands()
                 .queue(list -> {
                     List<CommandData> commandData =

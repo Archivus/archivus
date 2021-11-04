@@ -1,5 +1,5 @@
 package archivus.commands;
 
-public enum Type {
+public enum CommandType {
     ACCOUNT, POSTING, FEED, MISC
 }

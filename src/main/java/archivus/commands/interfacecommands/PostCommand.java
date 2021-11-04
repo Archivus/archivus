@@ -1,7 +1,7 @@
 package archivus.commands.interfacecommands;
 
 import archivus.commands.SlashCommand;
-import archivus.commands.Type;
+import archivus.commands.CommandType;
 import archivus.mongo.Mongo;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -30,7 +30,7 @@ public class PostCommand implements SlashCommand {
     }
 
     @Override
-    public Type getType() {
-        return Type.POSTING;
+    public CommandType getType() {
+        return CommandType.POSTING;
     }
 }

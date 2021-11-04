@@ -3,7 +3,7 @@ package archivus.commands.generalcommands;
 import archivus.commands.ButtonAction;
 import archivus.commands.CommandListener;
 import archivus.commands.SlashCommand;
-import archivus.commands.Type;
+import archivus.commands.CommandType;
 import archivus.mongo.Mongo;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Emoji;
@@ -21,12 +21,16 @@ import java.util.HashMap;
 public class HelpCommand implements SlashCommand {
     @Override
     public void execute(SlashCommandEvent event, Mongo mongo) {
+        // Get the command chosen, if it is not available, return the help message for the bot.
         OptionMapping commandOption = event.getOption("command");
         if(commandOption == null)
             this.getHelpMessage(event).queue();
         else {
+            // Convert Command to normal Slash Command
             String commandName = commandOption.getAsString();
             SlashCommand slashCommand = CommandListener.commands.get(commandName);
+
+            // Possibility of command being invalid so ephemerally message user about the incorrect command
             if(slashCommand == null) {
                 InteractionHook hook = event.getHook();
                 hook.setEphemeral(true);
@@ -40,9 +44,12 @@ public class HelpCommand implements SlashCommand {
 
     @Override
     public void executeWithButton(ButtonClickEvent event, Mongo mongo) {
+        // Verify the interaction is coming from the user who ran the help command
         String[] buttonId = event.getComponentId().split(":");
         if(!buttonId[0].equals(event.getUser().getId()))
             return;
+
+        // Get and execute the Command for the corresponding button
         ButtonAction buttonAction = buttonHandler.get(buttonId[1].substring(0, buttonId[1].indexOf('_')));
         buttonAction.buttonExecute(event);
     }
@@ -76,17 +83,18 @@ public class HelpCommand implements SlashCommand {
     }
 
     @Override
-    public Type getType() {
-        return Type.MISC;
+    public CommandType getType() {
+        return CommandType.MISC;
     }
 
+    //Map for all actions buttons can do
     private final HashMap<String, ButtonAction> buttonHandler = new HashMap<>(){
         {
             put("account", event -> {
                 EmbedBuilder embed = new EmbedBuilder();
                 embed.setTitle("Account Commands");
                 for(SlashCommand c : CommandListener.commands.values()){
-                    if(c.getType() == Type.ACCOUNT)
+                    if(c.getType() == CommandType.ACCOUNT)
                         embed.addField(c.getData().getName(),
                                 c.getData().getDescription() +
                                         "\nEnter `/help " + c.getData().getName() + "` for help",
@@ -99,7 +107,7 @@ public class HelpCommand implements SlashCommand {
                 EmbedBuilder embed = new EmbedBuilder();
                 embed.setTitle("Feed Commands");
                 for(SlashCommand c : CommandListener.commands.values()){
-                    if(c.getType() == Type.FEED)
+                    if(c.getType() == CommandType.FEED)
                         embed.addField(c.getData().getName(),
                                 c.getData().getDescription() +
                                         "\nEnter `/help " + c.getData().getName() + "` for help",
@@ -112,7 +120,7 @@ public class HelpCommand implements SlashCommand {
                 EmbedBuilder embed = new EmbedBuilder();
                 embed.setTitle("Posting Commands");
                 for(SlashCommand c : CommandListener.commands.values()){
-                    if(c.getType() == Type.POSTING)
+                    if(c.getType() == CommandType.POSTING)
                         embed.addField(c.getData().getName(),
                                 c.getData().getDescription() +
                                         "\nEnter `/help " + c.getData().getName() + "` for help",
@@ -125,7 +133,7 @@ public class HelpCommand implements SlashCommand {
                 EmbedBuilder embed = new EmbedBuilder();
                 embed.setTitle("Miscellaneous Commands");
                 for(SlashCommand c : CommandListener.commands.values()){
-                    if(c.getType() == Type.MISC)
+                    if(c.getType() == CommandType.MISC)
                         embed.addField(c.getData().getName(),
                                 c.getData().getDescription() +
                                         "\nEnter `/help " + c.getData().getName() + "` for help",

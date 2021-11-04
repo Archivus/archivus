@@ -43,6 +43,7 @@ public class CommandListener extends ListenerAdapter {
         SlashCommand command = commands.get(event.getName());
         if(command == null) return;
 
+        // Delay the reply "Archivus is thinking..."
         event.deferReply().queue();
         command.execute(event, mongo);
     }
