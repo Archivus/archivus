@@ -1,5 +1,6 @@
 package archivus.commands.generalcommands;
 
+import archivus.Archivus;
 import archivus.commands.ButtonAction;
 import archivus.commands.CommandListener;
 import archivus.commands.SlashCommand;
@@ -32,6 +33,7 @@ public class HelpCommand implements SlashCommand {
 
             // Possibility of command being invalid so ephemerally message user about the incorrect command
             if(slashCommand == null) {
+                event.deferReply(true).queue();
                 InteractionHook hook = event.getHook();
                 hook.setEphemeral(true);
                 hook.sendMessage("'" + commandName + "' is not a valid command, " +
@@ -50,7 +52,7 @@ public class HelpCommand implements SlashCommand {
             return;
 
         // Get and execute the Command for the corresponding button
-        ButtonAction buttonAction = buttonHandler.get(buttonId[1].substring(0, buttonId[1].indexOf('_')));
+        ButtonAction buttonAction = buttonHandler.get(buttonId[1].substring(1+buttonId[1].indexOf('_')));
         buttonAction.buttonExecute(event);
     }
 
@@ -63,7 +65,8 @@ public class HelpCommand implements SlashCommand {
     @Override
     public ReplyAction getHelpMessage(SlashCommandEvent event) {
         EmbedBuilder embed = new EmbedBuilder();
-        embed.setAuthor("Archivus Commands", event.getJDA().getSelfUser().getAvatarUrl());
+        embed.setAuthor("Archivus Commands", null, event.getJDA().getSelfUser().getAvatarUrl());
+        embed.setColor(Archivus.colorPicker());
         embed.setDescription("Click on a command topic below or enter `/help COMMAND_NAME` for help on a specific " +
                 "command.");
         embed.addField("Useful Links",
@@ -71,14 +74,14 @@ public class HelpCommand implements SlashCommand {
                         "[Website](INSERT SITE)\n" +
                         "[Support Server](INSERT SERVER)\n" +
                         "[Patreon](INSERT PATREON)", false);
-        return event.replyEmbeds(embed.build()) .addActionRow(
-                Button.primary(event.getUser().getId() + ":account_help", "Account Commands")
+        return event.replyEmbeds(embed.build()).addActionRow(
+                Button.primary(event.getUser().getId() + ":help_account", "Account Commands")
                         .withEmoji(Emoji.fromUnicode("U+1F9D1")),
-                Button.primary(event.getUser().getId() + ":posting_help", "Posting Commands")
+                Button.primary(event.getUser().getId() + ":help_posting", "Posting Commands")
                         .withEmoji(Emoji.fromUnicode("U+1F4EC")),
-                Button.primary(event.getUser().getId() + ":misc_help", "Miscellaneous Commands")
+                Button.primary(event.getUser().getId() + ":help_misc", "Miscellaneous Commands")
                         .withEmoji(Emoji.fromUnicode("U+1F5D1")),
-                Button.primary(event.getUser().getId() + ":feed_help", "Feed Commands")
+                Button.primary(event.getUser().getId() + ":help_feed", "Feed Commands")
                         .withEmoji(Emoji.fromUnicode("U+1F4DC")));
     }
 
@@ -92,6 +95,7 @@ public class HelpCommand implements SlashCommand {
         {
             put("account", event -> {
                 EmbedBuilder embed = new EmbedBuilder();
+                embed.setColor(Archivus.colorPicker());
                 embed.setTitle("Account Commands");
                 for(SlashCommand c : CommandListener.commands.values()){
                     if(c.getType() == CommandType.ACCOUNT)
@@ -101,10 +105,19 @@ public class HelpCommand implements SlashCommand {
                                 true);
                 }
                 embed.setFooter("Enter `/help COMMAND_NAME` for help on any command!");
-                event.replyEmbeds(embed.build()).queue();
+                event.replyEmbeds(embed.build()).addActionRow(
+                        Button.primary(event.getUser().getId() + ":help_account", "Account Commands")
+                                .withEmoji(Emoji.fromUnicode("U+1F9D1")),
+                        Button.primary(event.getUser().getId() + ":help_posting", "Posting Commands")
+                                .withEmoji(Emoji.fromUnicode("U+1F4EC")),
+                        Button.primary(event.getUser().getId() + ":help_misc", "Miscellaneous Commands")
+                                .withEmoji(Emoji.fromUnicode("U+1F5D1")),
+                        Button.primary(event.getUser().getId() + ":help_feed", "Feed Commands")
+                                .withEmoji(Emoji.fromUnicode("U+1F4DC"))).queue();
             });
             put("feed", event -> {
                 EmbedBuilder embed = new EmbedBuilder();
+                embed.setColor(Archivus.colorPicker());
                 embed.setTitle("Feed Commands");
                 for(SlashCommand c : CommandListener.commands.values()){
                     if(c.getType() == CommandType.FEED)
@@ -114,10 +127,19 @@ public class HelpCommand implements SlashCommand {
                                 true);
                 }
                 embed.setFooter("Enter `/help COMMAND_NAME` for help on any command!");
-                event.replyEmbeds(embed.build()).queue();
+                event.replyEmbeds(embed.build()).addActionRow(
+                        Button.primary(event.getUser().getId() + ":help_account", "Account Commands")
+                                .withEmoji(Emoji.fromUnicode("U+1F9D1")),
+                        Button.primary(event.getUser().getId() + ":help_posting", "Posting Commands")
+                                .withEmoji(Emoji.fromUnicode("U+1F4EC")),
+                        Button.primary(event.getUser().getId() + ":help_misc", "Miscellaneous Commands")
+                                .withEmoji(Emoji.fromUnicode("U+1F5D1")),
+                        Button.primary(event.getUser().getId() + ":help_feed", "Feed Commands")
+                                .withEmoji(Emoji.fromUnicode("U+1F4DC"))).queue();
             });
             put("posting", event -> {
                 EmbedBuilder embed = new EmbedBuilder();
+                embed.setColor(Archivus.colorPicker());
                 embed.setTitle("Posting Commands");
                 for(SlashCommand c : CommandListener.commands.values()){
                     if(c.getType() == CommandType.POSTING)
@@ -127,10 +149,19 @@ public class HelpCommand implements SlashCommand {
                                 true);
                 }
                 embed.setFooter("Enter `/help COMMAND_NAME` for help on any command!");
-                event.replyEmbeds(embed.build()).queue();
+                event.replyEmbeds(embed.build()).addActionRow(
+                        Button.primary(event.getUser().getId() + ":help_account", "Account Commands")
+                                .withEmoji(Emoji.fromUnicode("U+1F9D1")),
+                        Button.primary(event.getUser().getId() + ":help_posting", "Posting Commands")
+                                .withEmoji(Emoji.fromUnicode("U+1F4EC")),
+                        Button.primary(event.getUser().getId() + ":help_misc", "Miscellaneous Commands")
+                                .withEmoji(Emoji.fromUnicode("U+1F5D1")),
+                        Button.primary(event.getUser().getId() + ":help_feed", "Feed Commands")
+                                .withEmoji(Emoji.fromUnicode("U+1F4DC"))).queue();
             });
             put("misc", event -> {
                 EmbedBuilder embed = new EmbedBuilder();
+                embed.setColor(Archivus.colorPicker());
                 embed.setTitle("Miscellaneous Commands");
                 for(SlashCommand c : CommandListener.commands.values()){
                     if(c.getType() == CommandType.MISC)
@@ -140,7 +171,15 @@ public class HelpCommand implements SlashCommand {
                                 true);
                 }
                 embed.setFooter("Enter `/help COMMAND_NAME` for help on any command!");
-                event.replyEmbeds(embed.build()).queue();
+                event.replyEmbeds(embed.build()).addActionRow(
+                        Button.primary(event.getUser().getId() + ":help_account", "Account Commands")
+                                .withEmoji(Emoji.fromUnicode("U+1F9D1")),
+                        Button.primary(event.getUser().getId() + ":help_posting", "Posting Commands")
+                                .withEmoji(Emoji.fromUnicode("U+1F4EC")),
+                        Button.primary(event.getUser().getId() + ":help_misc", "Miscellaneous Commands")
+                                .withEmoji(Emoji.fromUnicode("U+1F5D1")),
+                        Button.primary(event.getUser().getId() + ":help_feed", "Feed Commands")
+                                .withEmoji(Emoji.fromUnicode("U+1F4DC"))).queue();
             });
         }
     };
