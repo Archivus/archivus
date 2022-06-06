@@ -13,6 +13,8 @@ import javax.security.auth.login.LoginException;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.Random;
 
@@ -22,7 +24,7 @@ public class Archivus {
         // Try not to run Program from IDE, instead from the Command Line as running
         // as the command args are saved in a file
 
-        try(InputStream input = new FileInputStream("src/main/resources/archivus_secrets.properties")){
+        try(InputStream input = Files.newInputStream(Paths.get("src/main/resources/archivus_secrets.properties"))){
             Properties prop = new Properties();
             prop.load(input);
 

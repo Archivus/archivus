@@ -10,8 +10,7 @@ import archivus.user.interaction.conversation.Conversation;
 import archivus.user.interaction.conversation.ConversationAction;
 import archivus.user.interaction.conversation.ConversationException;
 import archivus.user.interaction.posting.PostTopic;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Sorts;
+
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
@@ -20,14 +19,17 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyAction;
+
 import org.bson.Document;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Properties;
 
 public class CreateAccountCommand implements SlashCommand {
@@ -51,7 +53,7 @@ public class CreateAccountCommand implements SlashCommand {
                                         " have enough rupees.", false)
                         .setFooter("Make sure to only include what you wish to have on your profile! " +
                                 "No NSFW, discrimination or harmful material.");
-                try(InputStream input = new FileInputStream("src/main/resources/archivus_links.properties")) {
+                try(InputStream input = Files.newInputStream(Paths.get("src/main/resources/archivus_links.properties"))) {
                     Properties prop = new Properties();
                     // load a properties file
                     prop.load(input);
@@ -173,6 +175,7 @@ public class CreateAccountCommand implements SlashCommand {
 
     private final ArrayList<Call> calls = new ArrayList<>(){
         {
+            Path path = Paths.get("src/main/resources/archivus_links.properties");
             add(new Call(){
                 @Override
                 public void call(ButtonClickEvent event, Document doc, Mongo mongo) {
@@ -188,7 +191,7 @@ public class CreateAccountCommand implements SlashCommand {
                                             " have enough rupees.", false)
                             .setFooter("Make sure to only include what you wish to have on your profile! " +
                                     "No NSFW, discrimination or harmful material.");
-                    try(InputStream input = new FileInputStream("src/main/resources/archivus_links.properties")) {
+                    try(InputStream input = Files.newInputStream(path)) {
                         Properties prop = new Properties();
                         // load a properties file
                         prop.load(input);
@@ -225,7 +228,7 @@ public class CreateAccountCommand implements SlashCommand {
                                 .setFooter("Click the 'Redo' button to remake your description.");
 
 
-                        try(InputStream input = new FileInputStream("src/main/resources/archivus_links.properties")) {
+                        try(InputStream input = Files.newInputStream(path)) {
                             Properties prop = new Properties();
                             // load a properties file
                             prop.load(input);
@@ -258,7 +261,7 @@ public class CreateAccountCommand implements SlashCommand {
                                     Archivus.funFact(),
                                     false);
 
-                    try(InputStream input = new FileInputStream("src/main/resources/archivus_links.properties")){
+                    try(InputStream input = Files.newInputStream(path)){
                         Properties prop = new Properties();
                         prop.load(input);
 
@@ -299,7 +302,7 @@ public class CreateAccountCommand implements SlashCommand {
                             .addField("Relatable", PostTopic.RELATABLE.data, true)
                             .setFooter("Remember to chose 3 memes and type 'Done' only once you have finished");
 
-                    try(InputStream input = new FileInputStream("src/main/resources/archivus_links.properties")){
+                    try(InputStream input = Files.newInputStream(path)){
                         Properties prop = new Properties();
                         prop.load(input);
 
@@ -344,7 +347,7 @@ public class CreateAccountCommand implements SlashCommand {
                                 .addField("Fun Fact", Archivus.funFact(), false)
                                 .setFooter("Select the button below to re-choose!");
 
-                        try(InputStream input = new FileInputStream("src/main/resources/archivus_links.properties")){
+                        try(InputStream input = Files.newInputStream(path)){
                             Properties prop = new Properties();
                             prop.load(input);
 
@@ -385,7 +388,7 @@ public class CreateAccountCommand implements SlashCommand {
                     embed.setFooter("You can always change this later in the account management menu.");
 
 
-                    try(InputStream input = new FileInputStream("src/main/resources/archivus_links.properties")){
+                    try(InputStream input = Files.newInputStream(path)){
                         Properties prop = new Properties();
                         prop.load(input);
 
@@ -506,7 +509,13 @@ public class CreateAccountCommand implements SlashCommand {
                 .append("archives", 0)
                 .append("topics", doc.getList("topics", Document.class));
 
-        UserProfile userProfile = new UserProfile(userDoc, mongo);
-        userProfile.userEmbedButton(event, event.getUser().getAvatarUrl(), false).queue();
+        mongo.useClient(client -> {
+            UserProfile userProfile = new UserProfile(userDoc,
+                    client.getDatabase("account")
+                            .getCollection("userdata"));
+            event.replyEmbeds(userProfile.userEmbed(event.getJDA().getSelfUser().getAvatarUrl(),
+                    event.getUser().getAvatarUrl())).queue();
+        }, event.getHook());
+
     };
 }

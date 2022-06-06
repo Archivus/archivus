@@ -50,11 +50,8 @@ public class Conversation {
             doc = tempDoc;
             callIndex++;
             if(calls.length <= callIndex) {
-                mongo.useClient(client ->
-                        finalAction.execute(event, this, client
-                        .getDatabase("account")
-                        .getCollection("userdata"))
-                        , event.getHook());
+                finalAction.execute(event, this,
+                        mongo);
                 conversations.remove(event.getUser().getId());
                 event.getMessage().delete().queue();
                 return;

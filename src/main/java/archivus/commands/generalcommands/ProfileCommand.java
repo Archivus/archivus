@@ -28,6 +28,9 @@ import org.bson.Document;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -40,7 +43,8 @@ public class ProfileCommand implements SlashCommand {
         OptionMapping userOption = event.getOption("user");
         OptionMapping userIDOption = event.getOption("id");
         String userId = "";
-        boolean isUser;
+
+        event.deferReply().queue();
 
         // Assign user based on...
         // If there was no option given, i.e, the user wants to view their own profile
@@ -48,7 +52,7 @@ public class ProfileCommand implements SlashCommand {
             userId = event.getUser().getId();
         // If a user was given as a selected member of a server
         else if(userOption != null)
-            userId = userOption.getAsUser().getId();
+            userId = userOption.getAsMentionable().getId();
         // If a user ID was given
         else if(userIDOption != null)
             userId = userIDOption.getAsString();
@@ -56,12 +60,17 @@ public class ProfileCommand implements SlashCommand {
 
         // Query user data from user ID and display the account given
         event.getJDA().retrieveUserById(userId).queue(user -> {
+            System.out.println(user.getAsTag());
             mongo.useClient(client -> {
                 try {
+                    InteractionHook hook = event.getHook();
+                    hook.setEphemeral(true);
                     UserProfile userProfile = new UserProfile(client.getDatabase("account")
                             .getCollection("userdata"), user);
-                    userProfile.userEmbed(event, user.getAvatarUrl(),
-                            event.getUser().getId().equals(userProfile.getUserId())).queue();
+                    hook.sendMessageEmbeds(userProfile.userEmbed(event.getJDA().getSelfUser().getAvatarUrl(),
+                            user.getAvatarUrl())).addActionRow(
+                            Button.success(event.getUser().getId() + ":profile_changedesc", "Change Description")
+                                    .withEmoji(Emoji.fromUnicode("U+1F504"))).queue();
                 } catch(AccountDoesNotExistException e) {
                     // Assign error message based on option
                     if (event.getOptions().isEmpty()) {
@@ -71,8 +80,9 @@ public class ProfileCommand implements SlashCommand {
                         hook.setEphemeral(true);
                         hook.sendMessageEmbeds(new EmbedBuilder()
                                 .setTitle("Error ⛔")
+                                .setColor(Archivus.colorPicker())
                                 .setDescription("You do not have a registered Archivus account")
-                                .addField("Enter `/manageaccount create` to make one!",
+                                .addField("Enter `/createaccount create` to make one!",
                                         "", false)
                                 .build()).queue();
                     } else {
@@ -80,9 +90,10 @@ public class ProfileCommand implements SlashCommand {
                         hook.setEphemeral(true);
                         hook.sendMessageEmbeds(new EmbedBuilder()
                                 .setTitle("Error ⛔")
+                                        .setColor(Archivus.colorPicker())
                                 .setDescription("This user does not have a registered Archivus account. " +
                                         "User: " + e.getTag() + " ~ ID: " + e.getUserID())
-                                .addField("They can enter `/manageaccount` to make one!",
+                                .addField("They can enter `/createaccount` to make one!",
                                         "", false)
                                 .build()).queue();
                     }
@@ -117,16 +128,21 @@ public class ProfileCommand implements SlashCommand {
                                 "No NSFW, discrimination or harmful material.");
                 try {
                     event.replyEmbeds(embed.build()).queue();
-                    new Conversation((e, c, m) -> {
-                        try {
-                            UserProfile userProfile = new UserProfile(m, event.getUser());
-                            userProfile.setDescription(c.tempDoc.getString("desc"));
-                            userProfile.updateProfile(mongo, e.getHook());
-                        } catch (AccountDoesNotExistException ex) {
-                            ex.printStackTrace();
-                        }
+                    new Conversation((e, c, m) -> 
 
-                    }, event.getUser().getId(), new ArrayList<>(Collections.singleton(new Call(){
+                        m.useClient(client -> {
+                            try {
+                                UserProfile userProfile = new UserProfile(client.getDatabase("account")
+                                        .getCollection("userdata"), event.getUser());
+                                userProfile.setDescription(c.doc.getString("desc"));
+                                userProfile.updateProfile(client.getDatabase("account")
+                                        .getCollection("userdata"), e.getHook());
+                                e.reply("Description successfully changed! ✅").queue();
+                            }catch (AccountDoesNotExistException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                        }, event.getHook())
+                    , event.getUser().getId(), new ArrayList<>(Collections.singleton(new Call(){
                         @Override
                         public void call(ButtonClickEvent event, Document doc, Mongo mongo) {
                             EmbedBuilder embed = new EmbedBuilder();
@@ -141,7 +157,7 @@ public class ProfileCommand implements SlashCommand {
                                                     " have enough rupees.", false)
                                     .setFooter("Make sure to only include what you wish to have on your profile! " +
                                             "No NSFW, discrimination or harmful material.");
-                            try(InputStream input = new FileInputStream("src/main/resources/archivus_links.properties")) {
+                            try(InputStream input = Files.newInputStream(Paths.get("src/main/resources/archivus_links.properties"))) {
                                 Properties prop = new Properties();
                                 // load a properties file
                                 prop.load(input);
@@ -160,8 +176,9 @@ public class ProfileCommand implements SlashCommand {
                         }
 
                         @Override
-                        public Document confirmation(GuildMessageReceivedEvent event, Document doc, Mongo mongo) {
+                         public Document confirmation(GuildMessageReceivedEvent event, Document doc, Mongo mongo) {
                             String desc = event.getMessage().getContentRaw();
+                            Path path = Paths.get("src/main/resources/archivus_links.properties");
                             if(desc.toCharArray().length > 100){
                                 EmbedBuilder embed = new EmbedBuilder();
                                 embed.setColor(Archivus.colorPicker());
@@ -178,7 +195,7 @@ public class ProfileCommand implements SlashCommand {
                                         .setFooter("Click the 'Redo' button to remake your description.");
 
 
-                                try(InputStream input = new FileInputStream("src/main/resources/archivus_links.properties")) {
+                                try(InputStream input = Files.newInputStream(path)) {
                                     Properties prop = new Properties();
                                     // load a properties file
                                     prop.load(input);
@@ -211,7 +228,7 @@ public class ProfileCommand implements SlashCommand {
                                             Archivus.funFact(),
                                             false);
 
-                            try(InputStream input = new FileInputStream("src/main/resources/archivus_links.properties")){
+                            try(InputStream input = Files.newInputStream(path)){
                                 Properties prop = new Properties();
                                 prop.load(input);
 
@@ -244,8 +261,8 @@ public class ProfileCommand implements SlashCommand {
                     // Show profile of the user
                     UserProfile userProfile = new UserProfile(client.getDatabase("account")
                             .getCollection("userdata"), event.getUser());
-                    userProfile.userEmbedButton(event, event.getUser().getAvatarUrl(),
-                            userProfile.getUserId().equals(event.getUser().getId())).queue();
+                    event.replyEmbeds(userProfile.userEmbed(event.getJDA().getSelfUser().getAvatarUrl(),
+                            event.getUser().getAvatarUrl())).queue();
                 } catch (AccountDoesNotExistException e) {
                     InteractionHook hook = event.getHook();
                     hook.setEphemeral(true);

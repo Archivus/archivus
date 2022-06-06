@@ -5,6 +5,7 @@ import archivus.commands.generalcommands.HelpCommand;
 import archivus.commands.generalcommands.ProfileCommand;
 import archivus.commands.interfacecommands.PostCommand;
 import archivus.commands.interfacecommands.ViewPostCommand;
+import archivus.commands.interfacecommands.feedcommands.FeedCommand;
 import archivus.mongo.Mongo;
 import archivus.user.interaction.conversation.Conversation;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
@@ -29,6 +30,8 @@ public class CommandListener extends ListenerAdapter {
 
             put("post", new PostCommand());
             put("view-post", new ViewPostCommand());
+
+            put("feed", new FeedCommand());
         }
     };
 
@@ -67,18 +70,19 @@ public class CommandListener extends ListenerAdapter {
         //Component ID structure userID:nameOfButton_customIdentifier
         String compID = event.getComponentId();
         String command = compID.substring(compID.indexOf(':')+1);
-        System.out.println(compID);
         if(command.contains("_"))
             command = command.substring(0, command.indexOf('_'));
 
-        System.out.println(command);
-        if(command.contains("conv")){
+        if(compID.endsWith("quit")) {
+            Conversation.conversations.remove(event.getUser().getId());
+            event.reply("Conversation ended!").queue();
+            return;
+        }
+        else if(command.contains("conv")){
             Conversation c = Conversation.conversations.get(event.getUser().getId());
             if (c != null )c.conversationButton(event, mongo);
             return;
         }
-        System.out.println(command);
-
         SlashCommand slashCommand = commands.get(command);
         slashCommand.executeWithButton(event, mongo);
     }
