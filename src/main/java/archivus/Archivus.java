@@ -4,6 +4,7 @@ import archivus.commands.CommandListener;
 import archivus.commands.CommandType;
 import archivus.commands.generalcommands.CreateAccountCommand;
 import archivus.mongo.Mongo;
+import archivus.springboot.SpringApp;
 import archivus.tasks.ScheduledTask;
 import archivus.tasks.UpdatePostTask;
 import net.dv8tion.jda.api.JDA;
@@ -36,6 +37,7 @@ public class Archivus {
 
 
 
+            SpringApp.init(args);
             final Mongo mongo = new Mongo(prop.getProperty("mongokey"));
             final CommandListener cmdListener = new CommandListener(mongo);
             final JDA jda = JDABuilder.createLight(prop.getProperty("botkey"),

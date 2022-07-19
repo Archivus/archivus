@@ -10,10 +10,8 @@ import archivus.user.UserProfile;
 import archivus.user.interaction.conversation.Call;
 import archivus.user.interaction.conversation.Conversation;
 import archivus.user.interaction.conversation.ConversationException;
-import com.mongodb.MongoTimeoutException;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Emoji;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
@@ -25,14 +23,12 @@ import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyAction;
 import org.bson.Document;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
 
@@ -128,13 +124,13 @@ public class ProfileCommand implements SlashCommand {
                                 "No NSFW, discrimination or harmful material.");
                 try {
                     event.replyEmbeds(embed.build()).queue();
-                    new Conversation((e, c, m) -> 
+                    new Conversation((e, c, m) ->
 
                         m.useClient(client -> {
                             try {
                                 UserProfile userProfile = new UserProfile(client.getDatabase("account")
                                         .getCollection("userdata"), event.getUser());
-                                userProfile.setDescription(c.doc.getString("desc"));
+                                userProfile.setDescription(c.conversationDataDocument.getString("desc"));
                                 userProfile.updateProfile(client.getDatabase("account")
                                         .getCollection("userdata"), e.getHook());
                                 e.reply("Description successfully changed! ✅").queue();
@@ -147,7 +143,7 @@ public class ProfileCommand implements SlashCommand {
                         public void call(ButtonClickEvent event, Document doc, Mongo mongo) {
                             EmbedBuilder embed = new EmbedBuilder();
                             embed.setColor(Archivus.colorPicker());
-                            embed.setTitle("Type your description with no Command Prefix or @mention! (100 character limit)")
+                            embed.setTitle("Reply to this message with your description!  (100 character limit)")
                                     .setDescription("Express yourself with a short, snappy description. \n" +
                                             "Here is some inspiration to give you ideas!")
                                     .addField("CCP Loyalty",
@@ -179,6 +175,10 @@ public class ProfileCommand implements SlashCommand {
                          public Document confirmation(GuildMessageReceivedEvent event, Document doc, Mongo mongo) {
                             String desc = event.getMessage().getContentRaw();
                             Path path = Paths.get("src/main/resources/archivus_links.properties");
+                            if(event.getMessage().getReferencedMessage()!= null
+                                    && event.getMessage().getReferencedMessage().getAuthor().getId().
+                                    equals(event.getJDA().getSelfUser().getId()))
+                                return null;
                             if(desc.toCharArray().length > 100){
                                 EmbedBuilder embed = new EmbedBuilder();
                                 embed.setColor(Archivus.colorPicker());
@@ -233,7 +233,7 @@ public class ProfileCommand implements SlashCommand {
                                 prop.load(input);
 
                                 embed.setAuthor("Confirm Your Description", prop.getProperty("archivus.pfp"))
-                                        .setThumbnail(prop.getProperty("archivus.confirm1_gif"));
+                                        .setThumbnail(prop.getProperty("archivus.confirm2_gif"));
                             } catch (IOException ex){
                                 embed.setAuthor("Confirm Your Description");
                                 System.err.println("There's an issue with the path given to or data in the " +
@@ -248,7 +248,7 @@ public class ProfileCommand implements SlashCommand {
                             }
                             return doc;
                         }
-                    })), mongo);
+                    })), mongo, event.getChannel());
                 } catch (ConversationException e){
                     event.reply("It seems as though you are already in a communication with Archivus, Click the " +
                             "button below to end it").addActionRow(

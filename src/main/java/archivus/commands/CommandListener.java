@@ -5,7 +5,7 @@ import archivus.commands.generalcommands.HelpCommand;
 import archivus.commands.generalcommands.ProfileCommand;
 import archivus.commands.interfacecommands.PostCommand;
 import archivus.commands.interfacecommands.ViewPostCommand;
-import archivus.commands.interfacecommands.feedcommands.FeedCommand;
+import archivus.commands.interfacecommands.feedcommands.CreateFeedCommand;
 import archivus.mongo.Mongo;
 import archivus.user.interaction.conversation.Conversation;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
@@ -31,7 +31,7 @@ public class CommandListener extends ListenerAdapter {
             put("post", new PostCommand());
             put("view-post", new ViewPostCommand());
 
-            put("feed", new FeedCommand());
+            put("create-feed", new CreateFeedCommand());
         }
     };
 
@@ -60,10 +60,11 @@ public class CommandListener extends ListenerAdapter {
                     .queue();
 
         Conversation c = Conversation.conversations.get(event.getAuthor().getId());
-        if(c != null) {
-            c.onResponse(event);
-        }
+        assert c != null;
+        if(!c.hasrun) c.onResponse(event);
     }
+
+
 
     @Override
     public void onButtonClick(@NotNull ButtonClickEvent event) {

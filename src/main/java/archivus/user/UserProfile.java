@@ -70,6 +70,9 @@ public class UserProfile {
         return c.find(new Document("userId", userId)).first() != null;
     }
 
+    public void setReputation(int rep){
+        this.reputation += rep;
+    }
 
     //TODO
     public MessageEmbed userEmbed(String botUrl, String avatar){
@@ -102,7 +105,7 @@ public class UserProfile {
                 .append("reputation", this.reputation)
                 .append("archives", this.archives)
                 .append("topics", this.topics);
-        collection.updateOne(new Document("userId", this.userId), userDocument);
+        collection.replaceOne(new Document("userId", this.userId), userDocument);
     }
 
     public int getReputation() {
