@@ -15,11 +15,12 @@ import java.util.logging.Logger;
 
 public class Post {
     public String imageUrl, title, userId, postId;
-    public int vote;
+    public int vote, reports;
     public long timeUploaded;
     public String memeType, userTag;
     public List<Document> tags;
     public ArrayList<String> viewedUsers;
+
 
     public Post(String imageUrl, String title, String userId, List<Document> tags, String userTag){
         this.imageUrl = imageUrl;
@@ -32,6 +33,7 @@ public class Post {
         this.viewedUsers = new ArrayList<>();
         this.postId = this.generatePostId();
         this.memeType = "Non-Archived Memes";
+        this.reports = 0;
 
         Logger logger = Logger.getAnonymousLogger();
         logger.info("Post Created -- userID: " + userId +

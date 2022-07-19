@@ -4,6 +4,9 @@ import archivus.commands.CommandListener;
 import archivus.commands.CommandType;
 import archivus.commands.generalcommands.CreateAccountCommand;
 import archivus.mongo.Mongo;
+import archivus.springboot.SpringApp;
+import archivus.tasks.ScheduledTask;
+import archivus.tasks.UpdatePostTask;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
@@ -15,10 +18,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Properties;
-import java.util.Random;
+import java.util.*;
 
 public class Archivus {
+    private final static ArrayList<ScheduledTask> tasks = new ArrayList<>(){
+        {
+            add(new UpdatePostTask());
+        }
+    };
     public static void main(String[] args) throws LoginException {
         // Input the Bot Token and Mongo Secret Key.
         // Try not to run Program from IDE, instead from the Command Line as running
@@ -30,6 +37,7 @@ public class Archivus {
 
 
 
+            SpringApp.init(args);
             final Mongo mongo = new Mongo(prop.getProperty("mongokey"));
             final CommandListener cmdListener = new CommandListener(mongo);
             final JDA jda = JDABuilder.createLight(prop.getProperty("botkey"),
@@ -44,6 +52,23 @@ public class Archivus {
             jda.updateCommands().addCommands(cmdListener.retrieveCommandData())
                     .queue();
 
+            TimerTask timerTask = new TimerTask() {
+                @Override
+                public void run() {
+                    tasks.forEach(t -> {
+                        t.task(mongo, jda);
+                        t.print();
+                    });
+                }
+            };
+            timerTask.run();
+            Calendar tomorrow = new GregorianCalendar();
+            tomorrow.add(Calendar.DATE, 1);
+            Timer timer = new Timer();
+            timer.scheduleAtFixedRate(timerTask, new GregorianCalendar(tomorrow.get(Calendar.YEAR),
+                    tomorrow.get(Calendar.MONTH), tomorrow.get(Calendar.DATE), 1, 0).getTime(),
+                    1000 * 60 * 60 * 24);
+
         } catch (IOException ex){
             System.err.println("There's an issue with the path given to or data in the " +
                     "archivus_links.properties file");
@@ -56,6 +81,7 @@ public class Archivus {
             Startup Tasks
             Bot List Authentication
          */
+
     }
 
     public static int colorPicker(){

@@ -27,7 +27,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -60,7 +59,7 @@ public class PostCommand implements SlashCommand {
             e.printStackTrace();
         } finally {
             try {
-                new Conversation(finalAction, event.getUser().getId(), calls, mongo);
+                new Conversation(finalAction, event.getUser().getId(), calls, mongo, event.getChannel());
                 event.replyEmbeds(embed.build()).queue();
             } catch (ConversationException e) {
                 event.reply("It seems as though you are already in a communication with Archivus, Click the " +
@@ -82,12 +81,12 @@ public class PostCommand implements SlashCommand {
         if(data[0].endsWith("topic")){
             PostTopic topic = PostTopic.toTopicByString(data[1]);
             Conversation con = Conversation.conversations.get(event.getUser().getId());
-            ArrayList<Document> doc = con.tempDoc.containsKey("topics") ?
-                    new ArrayList<>(con.tempDoc.getList("topics", Document.class)) : new ArrayList<>();
+            ArrayList<Document> doc = con.tempDataDocument.containsKey("topics") ?
+                    new ArrayList<>(con.tempDataDocument.getList("topics", Document.class)) : new ArrayList<>();
             doc.add(topic.toDoc());
-            if (con.tempDoc.containsKey("topics"))
-                con.tempDoc.replace("topics", doc);
-            else con.tempDoc.put("topics", doc);
+            if (con.tempDataDocument.containsKey("topics"))
+                con.tempDataDocument.replace("topics", doc);
+            else con.tempDataDocument.put("topics", doc);
 
 
             Conversation.conversations.replace(event.getUser().getId(), con);
@@ -96,11 +95,11 @@ public class PostCommand implements SlashCommand {
         } else if(data[0].endsWith("topicCLICKED")){
             PostTopic topic = PostTopic.toTopicByString(data[1]);
             Conversation con = Conversation.conversations.get(event.getUser().getId());
-            ArrayList<Document> doc = new ArrayList<>(con.tempDoc.getList("topics", Document.class));
+            ArrayList<Document> doc = new ArrayList<>(con.tempDataDocument.getList("topics", Document.class));
             doc.remove(topic.toDoc());
-            con.tempDoc.replace("topics", doc);
+            con.tempDataDocument.replace("topics", doc);
 
-            System.out.println(con.tempDoc);
+            System.out.println(con.tempDataDocument);
             Conversation.conversations.replace(event.getUser().getId(), con);
             event.editButton(Button.success(event.getUser().getId() + ":post_topic-" + data[1],
                     data[1].substring(0, 1).toUpperCase() + data[1].substring(1))).queue();
@@ -134,7 +133,7 @@ public class PostCommand implements SlashCommand {
     }
 
     ConversationAction finalAction = (event, conversation, mongo) -> mongo.useClient(client -> {
-        Document doc = conversation.doc;
+        Document doc = conversation.conversationDataDocument;
         Post post = new Post(doc.getString("imgUrl"), doc.getString("title"), event.getUser().getId(),
                 doc.getList("topics", Document.class), event.getUser().getAsTag());
 
@@ -204,6 +203,9 @@ public class PostCommand implements SlashCommand {
                                     "archivus_links.properties file");
                             ex.printStackTrace();
                         } finally {
+                            Conversation con = Conversation.conversations.get(event.getAuthor().getId());
+                            con.hasrun = true;
+                            Conversation.conversations.replace(event.getAuthor().getId(), con);
                             event.getMessage().replyEmbeds(embed.build())
                                     .setActionRow(Button.primary(event.getAuthor().getId() + ":conv_no",
                                             "Redo").withEmoji(Emoji.fromUnicode("U+1F504"))).queue();
@@ -298,6 +300,9 @@ public class PostCommand implements SlashCommand {
                                     "archivus_links.properties file");
                             ex.printStackTrace();
                         } finally {
+                            Conversation con = Conversation.conversations.get(event.getAuthor().getId());
+                            con.hasrun = true;
+                            Conversation.conversations.replace(event.getAuthor().getId(), con);
                             event.getMessage().replyEmbeds(embed.build())
                                     .setActionRow(Button.primary(event.getAuthor().getId() + ":conv_no",
                                             "Redo").withEmoji(Emoji.fromUnicode("U+1F504"))).queue();
