@@ -52,36 +52,66 @@ public class CreateAccountCommand implements SlashCommand {
                                         " have enough rupees.", false)
                         .setFooter("Make sure to only include what you wish to have on your profile! " +
                                 "No NSFW, discrimination or harmful material.");
-                try(InputStream input = Files.newInputStream(Paths.get("src/main/resources/archivus_links.properties"))) {
+                Path path = Paths.get("src/main/resources/archivus_links.properties");
+                try(InputStream input = Files.newInputStream(path)) {
                     Properties prop = new Properties();
                     // load a properties file
                     prop.load(input);
 
-                    embed.setAuthor("Set Your Description", prop.getProperty("archivus.pfp"))
+                    embed.setAuthor("Set Your Description", null, event.getJDA().getSelfUser().getAvatarUrl())
                             .setThumbnail(prop.getProperty("archivus.typing_gif"));
                     new Conversation(finalAction, event.getUser().getId(), calls, mongo, event.getChannel());
                 } catch (IOException ex) {
-                    embed.setAuthor("Set Your Description");
+                    System.err.println("Error in links properties file. archivus.typing_gif");
+                    EmbedBuilder embed1 = new EmbedBuilder();
+                    embed1.setAuthor("Error ⛔", null, event.getJDA().getSelfUser().getAvatarUrl());
+                    embed1.setTitle("There seems to be an error in your attempt to communicate with Archivus! ⛔");
+                    embed1.setDescription("The cause seems to be that you're already in a communication with " +
+                            "Archivus. Please press the button below to end the communication and restart the " +
+                            "account creation process.");
+                    embed1.setFooter("User ID: " + event.getUser().getId());
                     try {
                         new Conversation(finalAction, event.getUser().getId(), calls, mongo, event.getChannel());
                     } catch (ConversationException e) {
-                        event.reply("It seems as though you are already in a communication with Archivus, Click the " +
-                                "button below to end it").addActionRow(
-                                Button.primary(event.getUser().getId() + ":create-account_quit",
-                                        "End Communication").withEmoji(Emoji.fromUnicode("U+274C"))).queue();
-                    }
+                        try(InputStream input = Files.newInputStream(path)) {
+                            Properties prop = new Properties();
+                            prop.load(input);
+                            embed1.setThumbnail(prop.getProperty("archivus.error3_gif"));
 
+                        } catch (IOException e1){
+                            System.err.println("Error in links properties file. archivus.error3_gif");
+                        }
+                    }
                     System.err.println("There's an issue with the path given to or data in the " +
                             "archivus_links.properties file");
                     ex.printStackTrace();
-                } catch (ConversationException e){
-                    event.reply("It seems as though you are already in a communication with Archivus, Click the " +
-                            "button below to end it").addActionRow(
+                    event.replyEmbeds(embed1.build()).addActionRow(
                             Button.primary(event.getUser().getId() + ":create-account_quit",
                                     "End Communication").withEmoji(Emoji.fromUnicode("U+274C"))).queue();
-                } finally {
-                    event.replyEmbeds(embed.build()).queue();
+                    return;
+                } catch (ConversationException e){
+                    EmbedBuilder embed1 = new EmbedBuilder();
+                    embed1.setAuthor("Error ⛔", null, event.getJDA().getSelfUser().getAvatarUrl());
+                    embed1.setTitle("There seems to be an error in your attempt to communicate with Archivus! ⛔");
+                    embed1.setDescription("The cause seems to be that you're already in a communication with " +
+                            "Archivus. Please press the button below to end the communication and restart the " +
+                            "account creation process.");
+                    embed1.setFooter("User ID: " + event.getUser().getId());
+                    try(InputStream input = Files.newInputStream(path)) {
+                        Properties prop = new Properties();
+                        prop.load(input);
+
+                        embed1.setThumbnail(prop.getProperty("archivus.error3_gif"));
+                    } catch (IOException e1){
+                        System.err.println("Error in links properties file. archivus.error3_gif");
+                    }
+                    event.replyEmbeds(embed1.build()).addActionRow(
+                            Button.primary(event.getUser().getId() + ":create-account_quit",
+                                    "End Communication").withEmoji(Emoji.fromUnicode("U+274C"))).queue();
+                    return;
                 }
+                event.replyEmbeds(embed.build()).queue();
+
             }
         }, event.getHook());
     }
@@ -89,12 +119,10 @@ public class CreateAccountCommand implements SlashCommand {
     @Override
     public void executeWithButton(ButtonClickEvent event, Mongo mongo) {
         String[] buttonId = event.getComponentId().split(":");
-        System.out.println(Arrays.toString(buttonId));
         if(!buttonId[0].equals(event.getUser().getId()))
             return;
 
         String[] data = buttonId[1].substring(buttonId[1].indexOf('_')+1).split("-");
-        System.out.println(Arrays.toString(data));
         if(data[0].endsWith("topic")){
             PostTopic topic = PostTopic.toTopicByString(data[1]);
             Conversation con = Conversation.conversations.get(event.getUser().getId());
@@ -144,6 +172,9 @@ public class CreateAccountCommand implements SlashCommand {
             Conversation.conversations.replace(event.getUser().getId(), con);
             event.editButton(Button.success(event.getUser().getId() + ":create-account_user-" +
                     event.getUser().getId(), event.getUser().getAsTag())).queue();
+        } else if(data[0].contains("quit")){
+            Conversation.conversations.remove(event.getUser().getId());
+            event.reply("Your communication with Archivus has ended!").queue();
         }
 
     }
@@ -211,10 +242,12 @@ public class CreateAccountCommand implements SlashCommand {
                 @Override
                 public Document confirmation(GuildMessageReceivedEvent event, Document doc, Mongo mongo) {
                     String desc = event.getMessage().getContentRaw();
-                    if(event.getMessage().getReferencedMessage()!= null
-                        && event.getMessage().getReferencedMessage().getAuthor().getId().
-                            equals(event.getJDA().getSelfUser().getId()))
+                    if(event.getMessage().getReferencedMessage() == null
+                            || !event.getMessage().getReferencedMessage().getAuthor().getId().
+                            equals(event.getJDA().getSelfUser().getId())) {
+                        System.out.println(event.getMessage().getReferencedMessage().getAuthor().getId());
                         return null;
+                    }
                     if(desc.toCharArray().length > 100){
                         EmbedBuilder embed = new EmbedBuilder();
                         embed.setColor(Archivus.colorPicker());
@@ -246,7 +279,6 @@ public class CreateAccountCommand implements SlashCommand {
                             ex.printStackTrace();
                         } finally {
                             Conversation con = Conversation.conversations.get(event.getAuthor().getId());
-                            con.hasrun = true;
                             Conversation.conversations.replace(event.getAuthor().getId(), con);
                             event.getMessage().replyEmbeds(embed.build())
                                     .setActionRow(Button.primary(event.getAuthor().getId() + ":conv_no",
@@ -295,7 +327,8 @@ public class CreateAccountCommand implements SlashCommand {
                     doc.replace("topics", new ArrayList<>());
                     EmbedBuilder embed = new EmbedBuilder();
                     embed.setColor(Archivus.colorPicker())
-                            .setTitle("Choose 3 meme topics you like! Type 'Done' once you have finished " +
+                            .setTitle("Choose 3 meme topics you like! Reply to this message with" +
+                                    " 'Done' once you have finished " +
                                     "selecting!")
                             .setDescription("Your description: " + doc.getString("desc") + "\n\n" +
                                     "Tell us and the community the memes you most prefer! Your selections will" +
@@ -305,8 +338,7 @@ public class CreateAccountCommand implements SlashCommand {
                             .addField("Dark", PostTopic.DARK.data, true)
                             .addField("Gaming", PostTopic.GAMING.data, true)
                             .addField("Anime", PostTopic.ANIME.data, true)
-                            .addField("Relatable", PostTopic.RELATABLE.data, true)
-                            .setFooter("Remember to chose 3 memes and type 'Done' only once you have finished");
+                            .setFooter("Remember to chose 3 meme topics and type 'Done' only once you have finished");
 
                     try(InputStream input = Files.newInputStream(path)){
                         Properties prop = new Properties();
@@ -330,17 +362,22 @@ public class CreateAccountCommand implements SlashCommand {
                                         Button.success(event.getUser().getId() +
                                                 ":create-account_topic-gaming", "Gaming"),
                                         Button.success(event.getUser().getId() +
-                                                ":create-account_topic-anime", "Anime"),
-                                        Button.success(event.getUser().getId() +
-                                                ":create-account_topic-relatable", "Relatable")).queue();
+                                                ":create-account_topic-anime", "Anime")).queue();
                     }
                 }
 
                 @Override
                 public Document confirmation(GuildMessageReceivedEvent event, Document doc, Mongo mongo) {
+                    if(doc.getList("topics", Document.class) == null) return null;
                     ArrayList<Document> topics = new ArrayList<>(doc.getList("topics", Document.class));
-                    if (!event.getMessage().getContentRaw().toLowerCase().contains("done"))
+                    if (!event.getMessage().getContentRaw().equalsIgnoreCase("done")) return null;
+                    if(event.getMessage().getReferencedMessage() == null
+                            || !event.getMessage().getReferencedMessage().getAuthor().getId().
+                            equals(event.getJDA().getSelfUser().getId())) {
+                        System.out.println(event.getMessage().getReferencedMessage().getAuthor().getId());
                         return null;
+                    }
+
                     if(topics.size()!= 3){
                         StringBuilder str = new StringBuilder();
                         for (Document doc1: topics)

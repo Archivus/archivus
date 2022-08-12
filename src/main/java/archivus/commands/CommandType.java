@@ -3,7 +3,7 @@ package archivus.commands;
 import java.util.Locale;
 
 public enum CommandType {
-    ACCOUNT, POSTING, FEED, MISC;
+    ACCOUNT, POSTING, FEED, FUN;
 
 
     public static String capitalize(String s){

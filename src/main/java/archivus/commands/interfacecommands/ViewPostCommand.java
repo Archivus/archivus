@@ -107,7 +107,10 @@ public class ViewPostCommand implements SlashCommand {
         mongo.useClient(client -> {
             Document doc = client.getDatabase("post")
                     .getCollection("availableposts").find(new Document("postId", data[1])).first();
-            assert doc != null;
+            if(doc == null){
+                event.reply("Error in Document!").queue();
+                return;
+            }
             Post post = new Post(doc);
             if(post.viewedUsers.contains(event.getUser().getId())){
                 EmbedBuilder embed = post.postEmbed(event.getUser().getId(), false);

@@ -79,15 +79,15 @@ public class HelpCommand implements SlashCommand {
                         .withEmoji(Emoji.fromUnicode("U+1F9D1")),
                 Button.primary(event.getUser().getId() + ":help_posting", "Posting Commands")
                         .withEmoji(Emoji.fromUnicode("U+1F4EC")),
-                Button.primary(event.getUser().getId() + ":help_misc", "Miscellaneous Commands")
-                        .withEmoji(Emoji.fromUnicode("U+1F5D1")),
+                Button.primary(event.getUser().getId() + ":help_fun", "Fun Commands")
+                        .withEmoji(Emoji.fromUnicode("U+1F973")),
                 Button.primary(event.getUser().getId() + ":help_feed", "Feed Commands")
                         .withEmoji(Emoji.fromUnicode("U+1F4DC")));
     }
 
     @Override
     public CommandType getType() {
-        return CommandType.MISC;
+        return CommandType.FUN;
     }
 
     //Map for all actions buttons can do
@@ -110,8 +110,8 @@ public class HelpCommand implements SlashCommand {
                                 .withEmoji(Emoji.fromUnicode("U+1F9D1")),
                         Button.primary(event.getUser().getId() + ":help_posting", "Posting Commands")
                                 .withEmoji(Emoji.fromUnicode("U+1F4EC")),
-                        Button.primary(event.getUser().getId() + ":help_misc", "Miscellaneous Commands")
-                                .withEmoji(Emoji.fromUnicode("U+1F5D1")),
+                        Button.primary(event.getUser().getId() + ":help_fun", "Fun Commands")
+                                .withEmoji(Emoji.fromUnicode("U+1F973")),
                         Button.primary(event.getUser().getId() + ":help_feed", "Feed Commands")
                                 .withEmoji(Emoji.fromUnicode("U+1F4DC"))).queue();
             });
@@ -132,8 +132,8 @@ public class HelpCommand implements SlashCommand {
                                 .withEmoji(Emoji.fromUnicode("U+1F9D1")),
                         Button.primary(event.getUser().getId() + ":help_posting", "Posting Commands")
                                 .withEmoji(Emoji.fromUnicode("U+1F4EC")),
-                        Button.primary(event.getUser().getId() + ":help_misc", "Miscellaneous Commands")
-                                .withEmoji(Emoji.fromUnicode("U+1F5D1")),
+                        Button.primary(event.getUser().getId() + ":help_fun", "Fun Commands")
+                                .withEmoji(Emoji.fromUnicode("U+1F973")),
                         Button.primary(event.getUser().getId() + ":help_feed", "Feed Commands")
                                 .withEmoji(Emoji.fromUnicode("U+1F4DC"))).queue();
             });
@@ -154,17 +154,17 @@ public class HelpCommand implements SlashCommand {
                                 .withEmoji(Emoji.fromUnicode("U+1F9D1")),
                         Button.primary(event.getUser().getId() + ":help_posting", "Posting Commands")
                                 .withEmoji(Emoji.fromUnicode("U+1F4EC")),
-                        Button.primary(event.getUser().getId() + ":help_misc", "Miscellaneous Commands")
-                                .withEmoji(Emoji.fromUnicode("U+1F5D1")),
+                        Button.primary(event.getUser().getId() + ":help_fun", "Fun Commands")
+                                .withEmoji(Emoji.fromUnicode("U+1F973")),
                         Button.primary(event.getUser().getId() + ":help_feed", "Feed Commands")
                                 .withEmoji(Emoji.fromUnicode("U+1F4DC"))).queue();
             });
-            put("misc", event -> {
+            put("fun", event -> {
                 EmbedBuilder embed = new EmbedBuilder();
                 embed.setColor(Archivus.colorPicker());
-                embed.setTitle("Miscellaneous Commands");
+                embed.setTitle("Fun Commands");
                 for(SlashCommand c : CommandListener.commands.values()){
-                    if(c.getType() == CommandType.MISC)
+                    if(c.getType() == CommandType.FUN)
                         embed.addField(c.getData().getName(),
                                 c.getData().getDescription() +
                                         "\nEnter `/help " + c.getData().getName() + "` for help",
@@ -176,8 +176,8 @@ public class HelpCommand implements SlashCommand {
                                 .withEmoji(Emoji.fromUnicode("U+1F9D1")),
                         Button.primary(event.getUser().getId() + ":help_posting", "Posting Commands")
                                 .withEmoji(Emoji.fromUnicode("U+1F4EC")),
-                        Button.primary(event.getUser().getId() + ":help_misc", "Miscellaneous Commands")
-                                .withEmoji(Emoji.fromUnicode("U+1F5D1")),
+                        Button.primary(event.getUser().getId() + ":help_fun", "Fun Commands")
+                                .withEmoji(Emoji.fromUnicode("U+1F973")),
                         Button.primary(event.getUser().getId() + ":help_feed", "Feed Commands")
                                 .withEmoji(Emoji.fromUnicode("U+1F4DC"))).queue();
             });

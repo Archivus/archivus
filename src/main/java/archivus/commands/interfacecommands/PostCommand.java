@@ -103,6 +103,9 @@ public class PostCommand implements SlashCommand {
             Conversation.conversations.replace(event.getUser().getId(), con);
             event.editButton(Button.success(event.getUser().getId() + ":post_topic-" + data[1],
                     data[1].substring(0, 1).toUpperCase() + data[1].substring(1))).queue();
+        }  else if(data[0].contains("quit")){
+            Conversation.conversations.remove(event.getUser().getId());
+            event.reply("Your communication with Archivus has ended!").queue();
         }
     }
 
@@ -204,7 +207,7 @@ public class PostCommand implements SlashCommand {
                             ex.printStackTrace();
                         } finally {
                             Conversation con = Conversation.conversations.get(event.getAuthor().getId());
-                            con.hasrun = true;
+
                             Conversation.conversations.replace(event.getAuthor().getId(), con);
                             event.getMessage().replyEmbeds(embed.build())
                                     .setActionRow(Button.primary(event.getAuthor().getId() + ":conv_no",
@@ -254,7 +257,7 @@ public class PostCommand implements SlashCommand {
                     EmbedBuilder embed = new EmbedBuilder();
                     embed.setColor(Archivus.colorPicker());
                     embed.setAuthor("Set Post Title", null, event.getJDA().getSelfUser().getAvatarUrl());
-                    embed.setTitle("Create a title for your post!");
+                    embed.setTitle("Create a title for your post by replying to this message with your title!");
                     embed.setDescription("Try to make your title relevant to your image post! \n\n" +
                             "Here are some tips for a good title");
                     embed.addField("As much info in as little as possible",
@@ -279,6 +282,15 @@ public class PostCommand implements SlashCommand {
                 public Document confirmation(GuildMessageReceivedEvent event, Document doc, Mongo mongo) {
                     String title = event.getMessage().getContentDisplay();
                     Path path = Paths.get("src/main/resources/archivus_links.properties");
+                    if(event.getMessage().getReferencedMessage() == null
+                            || !event.getMessage().getReferencedMessage().getAuthor().getId().
+                            equals(event.getJDA().getSelfUser().getId())) {
+                        System.out.println(event.getMessage().getReferencedMessage().getAuthor().getId());
+                        return null;
+                    }
+                    if(!event.getMessage().getContentRaw().equalsIgnoreCase("done")){
+                        return null;
+                    }
                     if (title.length() > 150){
                         EmbedBuilder embed = new EmbedBuilder();
                         embed.setAuthor("Error In Title", event.getJDA().getSelfUser().getAvatarUrl());
@@ -301,7 +313,6 @@ public class PostCommand implements SlashCommand {
                             ex.printStackTrace();
                         } finally {
                             Conversation con = Conversation.conversations.get(event.getAuthor().getId());
-                            con.hasrun = true;
                             Conversation.conversations.replace(event.getAuthor().getId(), con);
                             event.getMessage().replyEmbeds(embed.build())
                                     .setActionRow(Button.primary(event.getAuthor().getId() + ":conv_no",
@@ -349,7 +360,8 @@ public class PostCommand implements SlashCommand {
                     EmbedBuilder embed = new EmbedBuilder();
                     embed.setColor(Archivus.colorPicker());
                     embed.setAuthor("Set Post Topics", null, event.getJDA().getSelfUser().getAvatarUrl());
-                    embed.setTitle("Enter 'Done' in the chat when you are finished! Set topics for your post!");
+                    embed.setTitle("Reply to this message with 'Done' in the chat when you are finished! " +
+                            "Set topics for your post!");
                     embed.setDescription("Add topics to your post so the people who like this content can see it" +
                             "\nPost Title: " + doc.getString("title"));
                     embed.setImage(doc.getString("imgUrl"));
@@ -372,17 +384,20 @@ public class PostCommand implements SlashCommand {
                                 Button.success(event.getUser().getId() +
                                         ":post_topic-gaming", "Gaming"),
                                 Button.success(event.getUser().getId() +
-                                        ":post_topic-anime", "Anime"),
-                                Button.success(event.getUser().getId() +
-                                        ":post_topic-relatable", "Relatable")).queue();
+                                        ":post_topic-anime", "Anime")).queue();
                     }
                 }
 
                 @Override
                 public Document confirmation(GuildMessageReceivedEvent event, Document doc, Mongo mongo) {
+                    if(doc.getList("topics", Document.class) == null) return null;
                     ArrayList<Document> topics = new ArrayList<>(doc.getList("topics", Document.class));
-                    if (!event.getMessage().getContentRaw().toLowerCase().contains("done"))
+                    if(event.getMessage().getReferencedMessage() == null
+                            || !event.getMessage().getReferencedMessage().getAuthor().getId().
+                            equals(event.getJDA().getSelfUser().getId())) {
+                        System.out.println(event.getMessage().getReferencedMessage().getAuthor().getId());
                         return null;
+                    }
                     Path path = Paths.get("src/main/resources/archivus_links.properties");
                     if(topics.size() > 3 || topics.size() < 1){
                         EmbedBuilder embed = new EmbedBuilder();

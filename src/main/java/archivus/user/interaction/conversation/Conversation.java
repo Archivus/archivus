@@ -49,6 +49,7 @@ public class Conversation {
     public void onResponse(GuildMessageReceivedEvent event){
         Call call = calls[callIndex];
         tempDataDocument = call.confirmation(event, conversationDataDocument, mongo);
+        hasrun = true;
         if(tempDataDocument == null) return;
         conversations.replace(event.getAuthor().getId(), this);
     }
@@ -70,6 +71,7 @@ public class Conversation {
             conversations.replace(event.getUser().getId(), this);
 
             event.getMessage().delete().queue();
+            hasrun = false;
             calls[callIndex].call(event, conversationDataDocument, mongo);
         } else if(compId.endsWith("no")) {
             event.getMessage().delete().queue();
