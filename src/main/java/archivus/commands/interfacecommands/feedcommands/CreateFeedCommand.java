@@ -82,12 +82,8 @@ public class CreateFeedCommand implements SlashCommand {
         } finally {
             event.reply("It seems as though you are already in a communication with Archivus, Click the " +
                     "button below to end it").addActionRow(
-                            Button.primary(event.getUser().getId() + ":create-feed_archive",
-                    "Archive").withEmoji(Emoji.fromUnicode("U+1F511")),
-                    Button.primary(event.getUser().getId() + ":create-feed_personal",
-                            "Personal").withEmoji(Emoji.fromUnicode("U+1F468")),
-                    Button.primary(event.getUser().getId() + ":create-feed_custom",
-                            "Custom").withEmoji(Emoji.fromUnicode("U+1F58A"))).queue();
+                            Button.primary(event.getUser().getId() + ":create-feed_quit",
+                    "Archive").withEmoji(Emoji.fromUnicode("U+1F511"))).queue();
 
         }
     }
@@ -190,8 +186,7 @@ public class CreateFeedCommand implements SlashCommand {
                     .addField("Shitpost", PostTopic.SHITPOST.data, true)
                     .addField("Dark", PostTopic.DARK.data, true)
                     .addField("Gaming", PostTopic.GAMING.data, true)
-                    .addField("Anime", PostTopic.ANIME.data, true)
-                    .addField("Relatable", PostTopic.RELATABLE.data, true);
+                    .addField("Anime", PostTopic.ANIME.data, true);
             try(InputStream input = Files.newInputStream(Paths.get("src/main/resources/archivus_links.properties"))){
                 Properties prop = new Properties();
                 // load a properties file
@@ -209,8 +204,6 @@ public class CreateFeedCommand implements SlashCommand {
                                 ":create-feed_topic-gaming", "Gaming"),
                         Button.success(event.getUser().getId() +
                                 ":create-feed_topic-anime", "Anime"),
-                        Button.success(event.getUser().getId() +
-                                ":create-feed_topic-relatable", "Relatable"),
                         Button.primary(event.getUser().getId() +
                                 ":create-feed_done", "Done")).queue();
             }
@@ -369,6 +362,9 @@ public class CreateFeedCommand implements SlashCommand {
             post.reports++;
             feed.currentPost = post;
             feedMap.replace(event.getChannel(), feed);
+        } else if(data[0].contains("quit")){
+            Conversation.conversations.remove(event.getUser().getId());
+            event.reply("Your communication with Archivus has ended!").queue();
         }
     }
 

@@ -3,6 +3,7 @@ package archivus.commands;
 import archivus.commands.generalcommands.CreateAccountCommand;
 import archivus.commands.generalcommands.HelpCommand;
 import archivus.commands.generalcommands.ProfileCommand;
+import archivus.commands.generalcommands.funcommands.*;
 import archivus.commands.interfacecommands.PostCommand;
 import archivus.commands.interfacecommands.ViewPostCommand;
 import archivus.commands.interfacecommands.feedcommands.CreateFeedCommand;
@@ -32,6 +33,12 @@ public class CommandListener extends ListenerAdapter {
             put("view-post", new ViewPostCommand());
 
             put("create-feed", new CreateFeedCommand());
+
+            put("angry", new AngryCommand());
+            put("dance", new DanceCommand());
+            put("nervous", new NervousCommand());
+            put("kiss", new KissCommand());
+            put("shoot", new ShootCommand());
         }
     };
 
@@ -55,12 +62,9 @@ public class CommandListener extends ListenerAdapter {
     @Override
     public void onGuildMessageReceived(@NotNull GuildMessageReceivedEvent event) {
         if(event.getAuthor().isBot()) return;
-        if(event.getMessage().getContentRaw().equals("amazing"))
-            event.getGuild().updateCommands().addCommands(retrieveCommandData())
-                    .queue();
 
         Conversation c = Conversation.conversations.get(event.getAuthor().getId());
-        assert c != null;
+        if(c == null) return;
         if(!c.hasrun) c.onResponse(event);
     }
 

@@ -69,6 +69,7 @@ public class Post {
         return stringBuilder.toString();
     }
 
+
     //Get Post
 
     public EmbedBuilder postEmbed(String userId, boolean addView){
@@ -106,7 +107,6 @@ public class Post {
 
 
 
-        System.out.println(this.viewedUsers.toString());
         return embed;
     }
 

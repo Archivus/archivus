@@ -15,14 +15,15 @@ public class Mongo {
     public Mongo(String secretKey){
         this.secretKey = secretKey;
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-        Logger rootLogger = loggerContext.getLogger("org.mongodb.driver");rootLogger.setLevel(Level.OFF);
+        Logger rootLogger = loggerContext.getLogger("org.mongodb.driver");
+        rootLogger.setLevel(Level.OFF);
     }
 
     public void useClient(ClientAction action, InteractionHook hook){
         try (MongoClient mongoClient = MongoClients.create(secretKey)) {
             action.clientAction(mongoClient);
         } catch(Exception e){
-            System.out.println("Error");
+            System.err.println("Error");
             hook.setEphemeral(true);
             hook.sendMessageEmbeds(new EmbedBuilder()
                     .setTitle("Error ⛔")
@@ -36,7 +37,7 @@ public class Mongo {
         try (MongoClient mongoClient = MongoClients.create(secretKey)) {
             action.clientAction(mongoClient);
         } catch(Exception e){
-            System.out.println("Error");
+            System.err.println("Error");
             e.printStackTrace();
         }
     }

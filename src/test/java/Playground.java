@@ -1,11 +1,17 @@
 import java.util.Arrays;
+import java.util.Scanner;
 
 public class Playground {
-    enum Test{
-        HELLO
-    }
     public static void main(String[] args) {
-        String s = "AMONGUS-SUSS";
-        System.out.println(Arrays.toString(s.split("-")));
+        Scanner input = new Scanner(System.in);
+        System.out.println(encrypt(input.next()));
     }
+
+    private static String encrypt(String input){
+        StringBuilder strB = new StringBuilder();
+        for(char c : input.toCharArray())
+            strB.append((char) (((int) c) + 3));
+        return strB.toString();
+    }
+
 }

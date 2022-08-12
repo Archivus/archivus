@@ -56,7 +56,6 @@ public class ProfileCommand implements SlashCommand {
 
         // Query user data from user ID and display the account given
         event.getJDA().retrieveUserById(userId).queue(user -> {
-            System.out.println(user.getAsTag());
             mongo.useClient(client -> {
                 try {
                     InteractionHook hook = event.getHook();
@@ -111,19 +110,17 @@ public class ProfileCommand implements SlashCommand {
         if(buttonId[1].contains("changedesc")){
                 EmbedBuilder embed = new EmbedBuilder();
                 embed.setColor(Archivus.colorPicker());
-                embed.setAuthor("Set Your Description");
-                embed.setTitle("Type your description with no Command Prefix or Ping! (100 character limit)")
-                        .setDescription("Express yourself with a short, snappy description. \n" +
-                                "Here is some inspiration to give you ideas!")
-                        .addField("CCP Loyalty",
-                                "I do not recall anything significant happening on June 4th 1989", false)
-                        .addField("Stuck in 2021",
-                                "Lamp oil? Rope? Bombs? You want it? It's yours my friend. As long as" +
-                                        " have enough rupees.", false)
-                        .setFooter("Make sure to only include what you wish to have on your profile! " +
-                                "No NSFW, discrimination or harmful material.");
+                embed.setTitle("Reply to this message with your description!  (100 character limit)")
+                    .setDescription("Express yourself with a short, snappy description. \n" +
+                            "Here is some inspiration to give you ideas!")
+                    .addField("CCP Loyalty",
+                            "I do not recall anything significant happening on June 4th 1989", false)
+                    .addField("Stuck in 2021",
+                            "Lamp oil? Rope? Bombs? You want it? It's yours my friend. As long as" +
+                                    " have enough rupees.", false)
+                    .setFooter("Make sure to only include what you wish to have on your profile! " +
+                            "No NSFW, discrimination or harmful material.");
                 try {
-                    event.replyEmbeds(embed.build()).queue();
                     new Conversation((e, c, m) ->
 
                         m.useClient(client -> {
@@ -135,7 +132,30 @@ public class ProfileCommand implements SlashCommand {
                                         .getCollection("userdata"), e.getHook());
                                 e.reply("Description successfully changed! ✅").queue();
                             }catch (AccountDoesNotExistException ex) {
-                                throw new RuntimeException(ex);
+                                InteractionHook hook = event.getHook();
+                                hook.setEphemeral(true);
+                                EmbedBuilder embed1 = new EmbedBuilder();
+                                embed1.setAuthor("Error ⛔", null, event.getJDA().getSelfUser().getAvatarUrl());
+                                embed1.setTitle("There seems to be an error in your attempt to communicate with Archivus! ⛔");
+                                embed1.setDescription("The cause seems to be that you don't have an account with " +
+                                        "Archivus. Please press the button below to begin the process " +
+                                        "to create an account");
+                                embed1.setFooter("User ID: " + event.getUser().getId());
+                                Path path = Paths.get("src/main/resources/archivus_links.properties");
+                                try(InputStream input = Files.newInputStream(path)) {
+                                    Properties prop = new Properties();
+                                    prop.load(input);
+
+
+                                    embed1.setThumbnail(prop.getProperty("archivus.error1_gif"));
+                                } catch (IOException e1){
+                                    System.err.println("Error in links properties file. archivus.error3_gif");
+                                } finally {
+                                    event.replyEmbeds(embed1.build()).addActionRow(
+                                            Button.success(event.getUser().getId() + ":create-account_account",
+                                                    "Create Account")
+                                                    .withEmoji(Emoji.fromUnicode("U+1F9D1"))).queue();
+                                }
                             }
                         }, event.getHook())
                     , event.getUser().getId(), new ArrayList<>(Collections.singleton(new Call(){
@@ -175,10 +195,12 @@ public class ProfileCommand implements SlashCommand {
                          public Document confirmation(GuildMessageReceivedEvent event, Document doc, Mongo mongo) {
                             String desc = event.getMessage().getContentRaw();
                             Path path = Paths.get("src/main/resources/archivus_links.properties");
-                            if(event.getMessage().getReferencedMessage()!= null
-                                    && event.getMessage().getReferencedMessage().getAuthor().getId().
-                                    equals(event.getJDA().getSelfUser().getId()))
+                            if(event.getMessage().getReferencedMessage() == null
+                                    || !event.getMessage().getReferencedMessage().getAuthor().getId().
+                                    equals(event.getJDA().getSelfUser().getId())) {
+                                System.out.println(event.getMessage().getReferencedMessage().getAuthor().getId());
                                 return null;
+                            }
                             if(desc.toCharArray().length > 100){
                                 EmbedBuilder embed = new EmbedBuilder();
                                 embed.setColor(Archivus.colorPicker());
@@ -204,11 +226,11 @@ public class ProfileCommand implements SlashCommand {
                                             .setThumbnail(prop.getProperty("archivus.error1_gif"));
                                 } catch (IOException ex) {
                                     embed.setAuthor("Error In Description");
-
                                     System.err.println("There's an issue with the path given to or data in the " +
                                             "archivus_links.properties file");
                                     ex.printStackTrace();
                                 } finally {
+
                                     event.getMessage().replyEmbeds(embed.build())
                                             .setActionRow(Button.primary(event.getAuthor().getId() + ":conv_no",
                                                     "Redo").withEmoji(Emoji.fromUnicode("U+1F504"))).queue();
@@ -249,12 +271,32 @@ public class ProfileCommand implements SlashCommand {
                             return doc;
                         }
                     })), mongo, event.getChannel());
+                    event.replyEmbeds(embed.build()).queue();
                 } catch (ConversationException e){
-                    event.reply("It seems as though you are already in a communication with Archivus, Click the " +
-                            "button below to end it").addActionRow(
+                    Path path = Paths.get("src/main/resources/archivus_links.properties");
+                    EmbedBuilder embed1 = new EmbedBuilder();
+                    embed1.setAuthor("Error ⛔", null, event.getJDA().getSelfUser().getAvatarUrl());
+                    embed1.setTitle("There seems to be an error in your attempt to communicate with Archivus! ⛔");
+                    embed1.setDescription("The cause seems to be that you're already in a communication with " +
+                            "Archivus. Please press the button below to end the communication and restart the " +
+                            "account creation process.");
+                    embed1.setFooter("User ID: " + event.getUser().getId());
+                    try(InputStream input = Files.newInputStream(path)) {
+                        Properties prop = new Properties();
+                        prop.load(input);
+
+                        embed1.setThumbnail(prop.getProperty("archivus.error3_gif"));
+                    } catch (IOException e1){
+                        System.err.println("Error in links properties file. archivus.error3_gif");
+                    }
+                    event.replyEmbeds(embed1.build()).addActionRow(
                             Button.primary(event.getUser().getId() + ":create-account_quit",
                                     "End Communication").withEmoji(Emoji.fromUnicode("U+274C"))).queue();
+
                 }
+        } else if(buttonId[1].contains("quit")){
+            Conversation.conversations.remove(event.getUser().getId());
+            event.reply("Your communication with Archivus has ended!").queue();
         } else {
             mongo.useClient(client -> {
                 try {
@@ -264,14 +306,27 @@ public class ProfileCommand implements SlashCommand {
                     event.replyEmbeds(userProfile.userEmbed(event.getJDA().getSelfUser().getAvatarUrl(),
                             event.getUser().getAvatarUrl())).queue();
                 } catch (AccountDoesNotExistException e) {
+                    Path path = Paths.get("src/main/resources/archivus_links.properties");
                     InteractionHook hook = event.getHook();
                     hook.setEphemeral(true);
-                    event.replyEmbeds(new EmbedBuilder().setTitle("Error ⛔")
-                            .setDescription("You do not have a registered Archivus account")
-                            .addField("Enter `/createaccount` to make one!",
 
-                                    "", false)
-                            .build()).queue();
+                    EmbedBuilder embed1 = new EmbedBuilder();
+                    embed1.setAuthor("Error ⛔", null, event.getJDA().getSelfUser().getAvatarUrl());
+                    embed1.setTitle("There seems to be an error in your attempt to communicate with Archivus! ⛔");
+                    embed1.setDescription("The cause seems to be that you don't have an account with " +
+                            "Archivus. Please press the button below to begin the process " +
+                            "to create an account");
+                    embed1.setFooter("User ID: " + event.getUser().getId());
+                    try(InputStream input = Files.newInputStream(path)) {
+                        Properties prop = new Properties();
+                        prop.load(input);
+                        embed1.setThumbnail(prop.getProperty("archivus.error1_gif"));
+                    } catch (IOException e1){
+                        System.err.println("Error in links properties file. archivus.error3_gif");
+                    } finally {
+                        hook.sendMessageEmbeds(embed1.build()).queue();
+                    }
+
                 }
             }, event.getHook());
         }
